@@ -516,28 +516,10 @@
         </div>
     </div>
 </div>
-<div class="response-legend">
-    <div class="legend-item">
-        <i class="fas fa-bolt legend-icon" style="color: #2e7d32;"></i>
-        <span>Rafale (réponse rapide et concise)</span>
-    </div>
-    <div class="legend-item">
-        <i class="fas fa-feather-alt legend-icon" style="color: #0d47a1;"></i>
-        <span>Albatros (réponse par les enjeux)</span>
-    </div>
-    <div class="legend-item">
-        <i class="fas fa-fish legend-icon" style="color: #e65100;"></i>
-        <span>Poisson japonais (contextualisation et analyse)</span>
-    </div>
-    <div class="legend-item">
-        <i class="fas fa-brain legend-icon" style="color: #4a148c;"></i>
-        <span>Analyse réflexive (exemples structurés)</span>
-    </div>
-    <div class="legend-item">
-        <i class="fas fa-theater-masks legend-icon" style="color: #b71c1c;"></i>
-        <span>Pièce de théâtre (mise en situation en 3 actes)</span>
-    </div>
+<div class="response-legend" id="responseLegend">
+    <!-- Contenu généré dynamiquement par JavaScript -->
 </div>
+    
 <div class="response-controls">
     <label for="showAutoResponses">Afficher les réponses automatiques:</label>
     <input type="checkbox" id="showAutoResponses">
@@ -602,12 +584,51 @@
 
 // Méthodes par épreuve
 const methodsByEpreuve = {
-    'ENTRETIEN': ['rafale', 'enjeux', 'poisson', 'reflexive', 'theatre'],
-    'DGCT': ['rafale', 'enjeux', 'telegraphe'], 
-    'QE': ['rafale', 'enjeux', 'telegraphe'],
-    'QS': ['rafale', 'enjeux', 'telegraphe'],
-    'ANGLAIS': ['methode_anglais_1', 'methode_anglais_2']
+// Définition des méthodes avec icônes et couleurs
+const methodsDefinition = {
+    'rafale': {name: 'Rafale', icon: 'fas fa-bolt', color: '#2e7d32', description: 'réponse rapide et concise'},
+    'enjeux': {name: 'Albatros', icon: 'fas fa-feather-alt', color: '#0d47a1', description: 'réponse par les enjeux'},
+    'poisson': {name: 'Poisson japonais', icon: 'fas fa-fish', color: '#e65100', description: 'contextualisation et analyse'},
+    'reflexive': {name: 'Analyse réflexive', icon: 'fas fa-brain', color: '#4a148c', description: 'exemples structurés'},
+    'theatre': {name: 'Pièce de théâtre', icon: 'fas fa-theater-masks', color: '#b71c1c', description: 'mise en situation en 3 actes'},
+    'telegraphe': {name: 'Télégraphe', icon: 'fas fa-paper-plane', color: '#ff6600', description: 'réponse en deux phrases structurées'},
+    'methode_anglais_1': {name: 'Méthode Anglais 1', icon: 'fas fa-globe', color: '#8e44ad', description: 'à définir'},
+    'methode_anglais_2': {name: 'Méthode Anglais 2', icon: 'fas fa-language', color: '#e74c3c', description: 'à définir'}
 };
+
+// Fonction pour obtenir toutes les méthodes uniques (pour l'onglet "all")
+function getAllMethods() {
+    const allMethods = [];
+    const seenKeys = new Set();
+    
+    Object.values(methodsByEpreuve).forEach(methods => {
+        methods.forEach(methodKey => {
+            if (!seenKeys.has(methodKey) && methodsDefinition[methodKey]) {
+                seenKeys.add(methodKey);
+                allMethods.push(methodsDefinition[methodKey]);
+            }
+        });
+    });
+    
+    return allMethods;
+}
+
+// Fonction pour mettre à jour la légende des méthodes selon l'épreuve
+function updateResponseLegend(epreuve) {
+    const legendContainer = document.getElementById('responseLegend');
+    const methodKeys = epreuve === 'all' ? 
+        getAllMethods().map(m => Object.keys(methodsDefinition).find(key => methodsDefinition[key] === m)) :
+        (methodsByEpreuve[epreuve] || []);
+    
+    const methods = methodKeys.map(key => methodsDefinition[key]).filter(Boolean);
+    
+    legendContainer.innerHTML = methods.map(method => `
+        <div class="legend-item">
+            <i class="${method.icon} legend-icon" style="color: ${method.color};"></i>
+            <span>${method.name} (${method.description})</span>
+        </div>
+    `).join('');
+}
         // Éléments DOM
         const categoryFilter = document.getElementById('categoryFilter');
         const subcategoryFilter = document.getElementById('subcategoryFilter');
@@ -678,7 +699,7 @@ const methodsByEpreuve = {
             }
         }
 
-        // Fonction pour changer d'onglet
+// Fonction pour changer d'onglet
 function switchTab(epreuve) {
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
@@ -686,6 +707,10 @@ function switchTab(epreuve) {
     document.querySelector(`[data-epreuve="${epreuve}"]`).classList.add('active');
     
     currentEpreuve = epreuve;
+    
+    // AJOUTER CES LIGNES :
+    updateResponseLegend(epreuve);
+    
     filterQuestions();
 }
 
@@ -942,6 +967,7 @@ if (hasPhrases) {
                         const processedQuestions = processCSVData(results.data);
                         if (processedQuestions && processedQuestions.length > 0) {
                             questions = processedQuestions;
+                            updateResponseLegend(currentEpreuve);
                             updateTabCounts();
                             try {
                                 localStorage.setItem('examQuestions', JSON.stringify(questions));
@@ -1237,9 +1263,10 @@ if (hasPhrases) {
                 }
             ];
 
-            updateTabCounts();
-            filterQuestions();
-        }
+                updateResponseLegend('all');
+                updateTabCounts();
+                filterQuestions();
+            }
         
         // Initialisation
         function init() {
@@ -1286,6 +1313,7 @@ showAutoResponsesCheckbox.addEventListener('change', function() {
     </script>
 </body>
 </html>
+
 
 
 
