@@ -482,6 +482,96 @@
     }
 }
 
+        /* Styles pour le toggle switch */
+.exam-toggle-container {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+.toggle-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.toggle-label {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.toggle-label input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #3498db;
+    transition: .4s;
+    border-radius: 30px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+    background-color: #e74c3c;
+}
+
+input:checked + .toggle-slider:before {
+    transform: translateX(30px);
+}
+
+.toggle-labels {
+    display: flex;
+    gap: 20px;
+}
+
+.toggle-labels span {
+    color: white;
+    font-weight: bold;
+    font-size: 1.1em;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}
+
+.toggle-labels span.active {
+    opacity: 1;
+    text-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+/* Amélioration visuelle des onglets sélectionnés */
+.tab.active::before {
+    content: "👑 ";
+    font-size: 1.2em;
+}
+
+.tab.active {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+    border: 2px solid #2980b9;
+}
     </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -492,6 +582,19 @@
     </div>
     <h2 class="subtitle">Préparateur intelligent aux oraux d'administrateur territorial</h2>
     <p class="author">par Fabrice RIBET, préparateur aux concours du CNFPT, administrateur territorial, magistrat financier</p>
+</div>
+    <!-- NOUVEAU : Toggle switch concours/examen pro -->
+<div class="exam-toggle-container">
+    <div class="toggle-wrapper">
+        <label class="toggle-label">
+            <input type="checkbox" id="examToggle" onchange="switchExamMode()">
+            <span class="toggle-slider"></span>
+        </label>
+        <div class="toggle-labels">
+            <span id="concours-label" class="active">🎓 Concours</span>
+            <span id="examen-label">📋 Examen professionnel</span>
+        </div>
+    </div>
 </div>
     <!-- Onglets des épreuves -->
 <div class="tabs-container">
@@ -603,7 +706,11 @@
         let questions = [];
 
         let currentEpreuve = 'all';
-
+// NOUVEAU : Variables pour gérer le mode examen
+let isExamenMode = false;
+const concoursTabs = ['all', 'ENTRETIEN', 'DGCT', 'QE', 'QS', 'ANGLAIS'];
+const examenTabs = ['ENTRETIEN'];
+        
 // Méthodes par épreuve
 const methodsByEpreuve = {
     'ENTRETIEN': ['rafale', 'enjeux', 'poisson', 'reflexive', 'theatre'],
@@ -684,10 +791,19 @@ const methodsByEpreuve = {
 
         // Fonction pour changer d'onglet
 function switchTab(epreuve) {
+    // Vérifier si on est en mode examen et si l'épreuve est autorisée
+    if (isExamenMode && !examenTabs.includes(epreuve)) {
+        return; // Bloquer le changement d'onglet non autorisé
+    }
+    
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
-    document.querySelector(`[data-epreuve="${epreuve}"]`).classList.add('active');
+    
+    const targetTab = document.querySelector(`[data-epreuve="${epreuve}"]`);
+    if (targetTab && targetTab.style.display !== 'none') {
+        targetTab.classList.add('active');
+    }
     
     currentEpreuve = epreuve;
     filterQuestions();
@@ -708,7 +824,48 @@ function updateTabCounts() {
             }
         });
     });
-
+// NOUVEAU : Fonction pour changer de mode
+function switchExamMode() {
+    const toggle = document.getElementById('examToggle');
+    const concoursLabel = document.getElementById('concours-label');
+    const examenLabel = document.getElementById('examen-label');
+    const tabsContainer = document.querySelector('.tabs');
+    
+    isExamenMode = toggle.checked;
+    
+    if (isExamenMode) {
+        // Mode examen professionnel
+        concoursLabel.classList.remove('active');
+        examenLabel.classList.add('active');
+        
+        // Masquer tous les onglets sauf ENTRETIEN
+        document.querySelectorAll('.tab').forEach(tab => {
+            const epreuve = tab.dataset.epreuve;
+            if (epreuve === 'ENTRETIEN') {
+                tab.style.display = 'flex';
+                tab.classList.add('active');
+                currentEpreuve = 'ENTRETIEN';
+            } else {
+                tab.style.display = 'none';
+                tab.classList.remove('active');
+            }
+        });
+    } else {
+        // Mode concours
+        examenLabel.classList.remove('active');
+        concoursLabel.classList.add('active');
+        
+        // Réafficher tous les onglets
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.style.display = 'flex';
+        });
+        
+        // Réinitialiser sur "Toutes les épreuves"
+        switchTab('all');
+    }
+    
+    filterQuestions();
+}
     document.getElementById('count-all').textContent = counts.all;
     document.getElementById('count-entretien').textContent = counts.ENTRETIEN;
     document.getElementById('count-dgct').textContent = counts.DGCT;
@@ -726,8 +883,10 @@ function updateTabCounts() {
     
     let filteredQuestions = questions.filter(question => {
         // Filtre par épreuve (NOUVEAU)
-        const epreuveMatch = currentEpreuve === 'all' || 
-                           question.epreuve.split(',').map(e => e.trim()).includes(currentEpreuve);
+       const epreuveMatch = isExamenMode ? 
+    question.epreuve.split(',').map(e => e.trim()).includes('ENTRETIEN') :
+    (currentEpreuve === 'all' || 
+     question.epreuve.split(',').map(e => e.trim()).includes(currentEpreuve));
         
         // Vos filtres existants
         let categoryMatch = categoryValue === 'all' || question.category.toString() === categoryValue;
