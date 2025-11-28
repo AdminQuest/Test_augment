@@ -420,6 +420,68 @@
     margin-bottom: 40px;
 }
 
+        /* Styles pour les onglets des épreuves */
+.tabs-container {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.tabs {
+    display: flex;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+    overflow: hidden;
+}
+
+.tab {
+    background-color: #ecf0f1;
+    color: #2c3e50;
+    padding: 12px 20px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-bottom: none;
+    transition: all 0.3s;
+    flex: 1;
+    text-align: center;
+    font-weight: 500;
+}
+
+.tab:hover {
+    background-color: #d5dbdb;
+}
+
+.tab.active {
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+.tab-badge {
+    background-color: rgba(255,255,255,0.3);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+/* Style pour la méthode Télégraphe */
+.auto-response.telegraphe {
+    background-color: #fff3e0;
+    border-left: 5px solid #ff6600;
+}
+.auto-response.telegraphe h4 {
+    color: #e65100;
+}
+.auto-response.telegraphe .response-icon {
+    color: #e65100;
+}
+
+@media (max-width: 768px) {
+    .tabs {
+        flex-direction: column;
+    }
+}
+
     </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -430,6 +492,29 @@
     </div>
     <h2 class="subtitle">Préparateur intelligent aux oraux d'administrateur territorial</h2>
     <p class="author">par Fabrice RIBET, administrateur territorial</p>
+</div>
+    <!-- Onglets des épreuves -->
+<div class="tabs-container">
+    <div class="tabs">
+        <div class="tab active" data-epreuve="all" onclick="switchTab('all')">
+            Toutes les épreuves <span class="tab-badge" id="count-all">0</span>
+        </div>
+        <div class="tab" data-epreuve="ENTRETIEN" onclick="switchTab('ENTRETIEN')">
+            Entretien avec le jury <span class="tab-badge" id="count-entretien">0</span>
+        </div>
+        <div class="tab" data-epreuve="DGCT" onclick="switchTab('DGCT')">
+            DGCT <span class="tab-badge" id="count-dgct">0</span>
+        </div>
+        <div class="tab" data-epreuve="QE" onclick="switchTab('QE')">
+            Questions européennes <span class="tab-badge" id="count-qe">0</span>
+        </div>
+        <div class="tab" data-epreuve="QS" onclick="switchTab('QS')">
+            Questions sociales <span class="tab-badge" id="count-qs">0</span>
+        </div>
+        <div class="tab" data-epreuve="ANGLAIS" onclick="switchTab('ANGLAIS')">
+            Anglais <span class="tab-badge" id="count-anglais">0</span>
+        </div>
+    </div>
 </div>
 <div class="response-legend">
     <div class="legend-item">
@@ -512,7 +597,17 @@
     <script>
         // Variables pour stocker les questions
         let questions = [];
-        
+
+        let currentEpreuve = 'all';
+
+// Méthodes par épreuve
+const methodsByEpreuve = {
+    'ENTRETIEN': ['rafale', 'enjeux', 'poisson', 'reflexive', 'theatre'],
+    'DGCT': ['rafale', 'enjeux', 'telegraphe'], 
+    'QE': ['rafale', 'enjeux', 'telegraphe'],
+    'QS': ['rafale', 'enjeux', 'telegraphe'],
+    'ANGLAIS': ['methode_anglais_1', 'methode_anglais_2']
+};
         // Éléments DOM
         const categoryFilter = document.getElementById('categoryFilter');
         const subcategoryFilter = document.getElementById('subcategoryFilter');
@@ -582,6 +677,41 @@
                 });
             }
         }
+
+        // Fonction pour changer d'onglet
+function switchTab(epreuve) {
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-epreuve="${epreuve}"]`).classList.add('active');
+    
+    currentEpreuve = epreuve;
+    filterQuestions();
+}
+
+// Fonction pour mettre à jour les compteurs des onglets
+function updateTabCounts() {
+    const counts = {
+        all: 0, ENTRETIEN: 0, DGCT: 0, QE: 0, QS: 0, ANGLAIS: 0
+    };
+
+    questions.forEach(question => {
+        counts.all++;
+        const epreuves = question.epreuve.split(',').map(e => e.trim());
+        epreuves.forEach(epreuve => {
+            if (counts[epreuve] !== undefined) {
+                counts[epreuve]++;
+            }
+        });
+    });
+
+    document.getElementById('count-all').textContent = counts.all;
+    document.getElementById('count-entretien').textContent = counts.ENTRETIEN;
+    document.getElementById('count-dgct').textContent = counts.DGCT;
+    document.getElementById('count-qe').textContent = counts.QE;
+    document.getElementById('count-qs').textContent = counts.QS;
+    document.getElementById('count-anglais').textContent = counts.ANGLAIS;
+}
         
         // Fonction pour filtrer les questions
         function filterQuestions() {
@@ -591,6 +721,16 @@
             let searchValue = searchInput.value.toLowerCase();
             
             let filteredQuestions = questions.filter(question => {
+    // NOUVEAU: Filtre par épreuve
+    const epreuveMatch = currentEpreuve === 'all' || 
+                       question.epreuve.split(',').map(e => e.trim()).includes(currentEpreuve);
+    
+    // Vos filtres existants...
+    let categoryMatch = categoryValue === 'all' || question.category.toString() === categoryValue;
+    // ... [gardez le reste de votre logique de filtrage]
+    
+    return epreuveMatch && categoryMatch && subcategoryMatch && difficultyMatch && searchMatch;
+});
                 let categoryMatch = categoryValue === 'all' || question.category.toString() === categoryValue;
                 let subcategoryMatch = subcategoryValue === 'all' || 
                                       `${question.category}.${question.subCategory}` === subcategoryValue;
@@ -619,6 +759,8 @@ function getResponseIcon(responseType) {
             return '<i class="fas fa-brain response-icon"></i>';
         case 'theatre':
             return '<i class="fas fa-theater-masks response-icon"></i>';
+            case 'telegraphe':
+            return '<i class="fas fa-paper-plane response-icon"></i>';
         default:
             return '<i class="fas fa-comment response-icon"></i>';
     }
@@ -687,6 +829,11 @@ if (question.responseMethod) {
         responseTitle = "Pièce de théâtre en 3 actes";
         labels = ["Acte I: Urgence", "Acte I: Mesures immédiates", "Acte II: Premières mesures", "Acte II: Communications", "Acte III: Solutions à moyen terme"];
     }
+    else if (methodLower.includes("télégraphe") || methodLower.includes("deux phrases")) {
+    responseType = "telegraphe";
+    responseTitle = "Télégraphe";
+    labels = ["Première phrase", "Seconde phrase", "", "", ""];
+}
 }
 
 // Icône correspondant au type de réponse
@@ -800,6 +947,7 @@ if (hasPhrases) {
                         const processedQuestions = processCSVData(results.data);
                         if (processedQuestions && processedQuestions.length > 0) {
                             questions = processedQuestions;
+                            updateTabCounts();
                             try {
                                 localStorage.setItem('examQuestions', JSON.stringify(questions));
                             } catch (e) {
@@ -1037,6 +1185,8 @@ if (hasPhrases) {
     phrase3: item["phrase 3"] || "",
     phrase4: item["phrase 4"] || "",
     phrase5: item["phrase 5"] || ""
+    epreuve: item["Épreuve "] || item["Épreuve"] || "ENTRETIEN",                   
+    motsClesTransversaux: item["Mots-clés-transversaux"] || ""                     
 };
             }).filter(q => q !== null);
             
@@ -1091,7 +1241,8 @@ if (hasPhrases) {
                     responseMethod: "Poisson japonais"
                 }
             ];
-            
+
+            updateTabCounts();
             filterQuestions();
         }
         
@@ -1140,3 +1291,4 @@ showAutoResponsesCheckbox.addEventListener('change', function() {
     </script>
 </body>
 </html>
+
