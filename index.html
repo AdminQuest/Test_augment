@@ -740,7 +740,7 @@ function updateTabCounts() {
                                 question.keywords.some(k => k.toLowerCase().includes(searchValue));
                 
                 return categoryMatch && subcategoryMatch && difficultyMatch && searchMatch;
-            });
+            };
             
             displayQuestions(filteredQuestions);
             questionsCount.textContent = `Questions affichées : ${filteredQuestions.length} sur ${questions.length}`;
@@ -1291,4 +1291,5 @@ showAutoResponsesCheckbox.addEventListener('change', function() {
     </script>
 </body>
 </html>
+
 
