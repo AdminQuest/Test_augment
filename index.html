@@ -714,37 +714,32 @@ function updateTabCounts() {
 }
         
         // Fonction pour filtrer les questions
-        function filterQuestions() {
-            let categoryValue = categoryFilter.value;
-            let subcategoryValue = subcategoryFilter.value;
-            let difficultyValue = difficultyFilter.value;
-            let searchValue = searchInput.value.toLowerCase();
-            
-            let filteredQuestions = questions.filter(question => {
-    // NOUVEAU: Filtre par épreuve
-    const epreuveMatch = currentEpreuve === 'all' || 
-                       question.epreuve.split(',').map(e => e.trim()).includes(currentEpreuve);
+      function filterQuestions() {
+    const categoryValue = categoryFilter.value;
+    const subcategoryValue = subcategoryFilter.value;
+    const difficultyValue = difficultyFilter.value;
+    const searchValue = searchInput.value.toLowerCase();
     
-    // Vos filtres existants...
-    let categoryMatch = categoryValue === 'all' || question.category.toString() === categoryValue;
-    // ... [gardez le reste de votre logique de filtrage]
+    let filteredQuestions = questions.filter(question => {
+        // Filtre par épreuve (NOUVEAU)
+        const epreuveMatch = currentEpreuve === 'all' || 
+                           question.epreuve.split(',').map(e => e.trim()).includes(currentEpreuve);
+        
+        // Vos filtres existants
+        let categoryMatch = categoryValue === 'all' || question.category.toString() === categoryValue;
+        let subcategoryMatch = subcategoryValue === 'all' || 
+                              `${question.category}.${question.subCategory}` === subcategoryValue;
+        let difficultyMatch = difficultyValue === 'all' || question.difficulty.toString() === difficultyValue;
+        let searchMatch = searchValue === '' || 
+                        question.question.toLowerCase().includes(searchValue) ||
+                        question.keywords.some(k => k.toLowerCase().includes(searchValue));
+        
+        return epreuveMatch && categoryMatch && subcategoryMatch && difficultyMatch && searchMatch;
+    });
     
-    return epreuveMatch && categoryMatch && subcategoryMatch && difficultyMatch && searchMatch;
-});
-                let categoryMatch = categoryValue === 'all' || question.category.toString() === categoryValue;
-                let subcategoryMatch = subcategoryValue === 'all' || 
-                                      `${question.category}.${question.subCategory}` === subcategoryValue;
-                let difficultyMatch = difficultyValue === 'all' || question.difficulty.toString() === difficultyValue;
-                let searchMatch = searchValue === '' || 
-                                question.question.toLowerCase().includes(searchValue) ||
-                                question.keywords.some(k => k.toLowerCase().includes(searchValue));
-                
-                return categoryMatch && subcategoryMatch && difficultyMatch && searchMatch;
-            };
-            
-            displayQuestions(filteredQuestions);
-            questionsCount.textContent = `Questions affichées : ${filteredQuestions.length} sur ${questions.length}`;
-        }
+    displayQuestions(filteredQuestions);
+    questionsCount.textContent = `Questions affichées : ${filteredQuestions.length} sur ${questions.length}`;
+}
 
 // Fonction pour obtenir l'icône selon le type de réponse
 function getResponseIcon(responseType) {
@@ -759,7 +754,7 @@ function getResponseIcon(responseType) {
             return '<i class="fas fa-brain response-icon"></i>';
         case 'theatre':
             return '<i class="fas fa-theater-masks response-icon"></i>';
-            case 'telegraphe':
+        case 'telegraphe':
             return '<i class="fas fa-paper-plane response-icon"></i>';
         default:
             return '<i class="fas fa-comment response-icon"></i>';
@@ -1291,5 +1286,6 @@ showAutoResponsesCheckbox.addEventListener('change', function() {
     </script>
 </body>
 </html>
+
 
 
