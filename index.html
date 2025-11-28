@@ -858,6 +858,31 @@ function updateTabCounts() {
 }
 
 // NOUVELLE FONCTION INDÉPENDANTE
+// Fonction pour mettre à jour les compteurs des onglets
+function updateTabCounts() {
+    const counts = {
+        all: 0, ENTRETIEN: 0, DGCT: 0, QE: 0, QS: 0, ANGLAIS: 0
+    };
+
+    questions.forEach(question => {
+        counts.all++;
+        const epreuves = question.epreuve.split(',').map(e => e.trim());
+        epreuves.forEach(epreuve => {
+            if (counts[epreuve] !== undefined) {
+                counts[epreuve]++;
+            }
+        });
+    });
+
+    document.getElementById('count-all').textContent = counts.all;
+    document.getElementById('count-entretien').textContent = counts.ENTRETIEN;
+    document.getElementById('count-dgct').textContent = counts.DGCT;
+    document.getElementById('count-qe').textContent = counts.QE;
+    document.getElementById('count-qs').textContent = counts.QS;
+    document.getElementById('count-anglais').textContent = counts.ANGLAIS;
+}
+
+// FONCTION SÉPARÉE pour le toggle switch
 function switchExamMode() {
     const toggle = document.getElementById('examToggle');
     const concoursLabel = document.getElementById('concours-label');
