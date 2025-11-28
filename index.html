@@ -572,6 +572,25 @@ input:checked + .toggle-slider:before {
     box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
     border: 2px solid #2980b9;
 }
+
+/* Style pour les onglets désactivés en mode examen */
+.tab.disabled {
+    background-color: #bdc3c7 !important;
+    color: #7f8c8d !important;
+    opacity: 0.5;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.tab.disabled:hover {
+    background-color: #bdc3c7 !important;
+    transform: none !important;
+}
+
+.tab.disabled .tab-badge {
+    background-color: rgba(0,0,0,0.2) !important;
+}
     </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -791,17 +810,22 @@ const methodsByEpreuve = {
 
         // Fonction pour changer d'onglet
 function switchTab(epreuve) {
+    // Bloquer si on tente d'accéder à un onglet désactivé en mode examen
+    const targetTab = document.querySelector(`[data-epreuve="${epreuve}"]`);
+    if (targetTab && targetTab.classList.contains('disabled')) {
+        return; // Bloquer le changement d'onglet
+    }
+    
     // Vérifier si on est en mode examen et si l'épreuve est autorisée
-    if (isExamenMode && !examenTabs.includes(epreuve)) {
-        return; // Bloquer le changement d'onglet non autorisé
+    if (isExamenMode && epreuve !== 'ENTRETIEN') {
+        return;
     }
     
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
     });
     
-    const targetTab = document.querySelector(`[data-epreuve="${epreuve}"]`);
-    if (targetTab && targetTab.style.display !== 'none') {
+    if (targetTab && !targetTab.classList.contains('disabled')) {
         targetTab.classList.add('active');
     }
     
@@ -824,40 +848,43 @@ function updateTabCounts() {
             }
         });
     });
-// NOUVEAU : Fonction pour changer de mode
 function switchExamMode() {
     const toggle = document.getElementById('examToggle');
     const concoursLabel = document.getElementById('concours-label');
     const examenLabel = document.getElementById('examen-label');
-    const tabsContainer = document.querySelector('.tabs');
     
     isExamenMode = toggle.checked;
     
     if (isExamenMode) {
-        // Mode examen professionnel
+        // Mode EXAMEN PROFESSIONNEL - seul ENTRETIEN accessible
         concoursLabel.classList.remove('active');
         examenLabel.classList.add('active');
         
-        // Masquer tous les onglets sauf ENTRETIEN
+        // Griser et désactiver tous les onglets sauf ENTRETIEN
         document.querySelectorAll('.tab').forEach(tab => {
             const epreuve = tab.dataset.epreuve;
             if (epreuve === 'ENTRETIEN') {
                 tab.style.display = 'flex';
+                tab.classList.remove('disabled');
                 tab.classList.add('active');
                 currentEpreuve = 'ENTRETIEN';
             } else {
-                tab.style.display = 'none';
+                tab.style.display = 'flex'; // Garder visible mais désactivé
+                tab.classList.add('disabled');
                 tab.classList.remove('active');
+                tab.style.pointerEvents = 'none'; // Désactiver les clics
             }
         });
     } else {
-        // Mode concours
+        // Mode CONCOURS - tous les onglets accessibles
         examenLabel.classList.remove('active');
         concoursLabel.classList.add('active');
         
-        // Réafficher tous les onglets
+        // Réactiver tous les onglets
         document.querySelectorAll('.tab').forEach(tab => {
             tab.style.display = 'flex';
+            tab.classList.remove('disabled');
+            tab.style.pointerEvents = 'auto'; // Réactiver les clics
         });
         
         // Réinitialiser sur "Toutes les épreuves"
