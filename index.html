@@ -848,6 +848,16 @@ function updateTabCounts() {
             }
         });
     });
+
+    document.getElementById('count-all').textContent = counts.all;
+    document.getElementById('count-entretien').textContent = counts.ENTRETIEN;
+    document.getElementById('count-dgct').textContent = counts.DGCT;
+    document.getElementById('count-qe').textContent = counts.QE;
+    document.getElementById('count-qs').textContent = counts.QS;
+    document.getElementById('count-anglais').textContent = counts.ANGLAIS;
+}
+
+// NOUVELLE FONCTION INDÉPENDANTE
 function switchExamMode() {
     const toggle = document.getElementById('examToggle');
     const concoursLabel = document.getElementById('concours-label');
@@ -864,15 +874,13 @@ function switchExamMode() {
         document.querySelectorAll('.tab').forEach(tab => {
             const epreuve = tab.dataset.epreuve;
             if (epreuve === 'ENTRETIEN') {
-                tab.style.display = 'flex';
                 tab.classList.remove('disabled');
                 tab.classList.add('active');
                 currentEpreuve = 'ENTRETIEN';
             } else {
-                tab.style.display = 'flex'; // Garder visible mais désactivé
                 tab.classList.add('disabled');
                 tab.classList.remove('active');
-                tab.style.pointerEvents = 'none'; // Désactiver les clics
+                tab.style.pointerEvents = 'none';
             }
         });
     } else {
@@ -882,12 +890,10 @@ function switchExamMode() {
         
         // Réactiver tous les onglets
         document.querySelectorAll('.tab').forEach(tab => {
-            tab.style.display = 'flex';
             tab.classList.remove('disabled');
-            tab.style.pointerEvents = 'auto'; // Réactiver les clics
+            tab.style.pointerEvents = 'auto';
         });
         
-        // Réinitialiser sur "Toutes les épreuves"
         switchTab('all');
     }
     
