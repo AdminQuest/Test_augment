@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin'Quest - Préparateur intelligent aux oraux d'administrateur territorial</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        /* STYLES POUR L'ÉCRAN DE VÉRIFICATION D'ABONNEMENT */
+        .subscription-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .subscription-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .subscription-container h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subscription-container .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .subscription-form {
+            margin-bottom: 30px;
+        }
+        
+        .subscription-form input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            transition: border-color 0.3s;
+        }
+        
+        .subscription-form input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .subscription-form button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin: 5px;
+        }
+        
+        .subscription-form button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .subscription-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .price-tag {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 10px 0;
+        }
+        
+        .features-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+        
+        .features-list li {
+            margin: 8px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .features-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #43a047;
+            font-weight: bold;
+        }
+        
+        .payment-section {
+            border-top: 2px solid #ecf0f1;
+            padding-top: 20px;
+        }
+        
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .payment-button {
+            padding: 15px 20px;
+            border: 2px solid #3498db;
+            background: white;
+            color: #3498db;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95em;
+        }
+        
+        .payment-button:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .payment-button.stripe {
+            border-color: #6772e5;
+            color: #6772e5;
+            background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+        }
+        
+        .payment-button.stripe:hover {
+            background: #6772e5;
+            color: white;
+        }
+        
+        .payment-button.bank {
+            border-color: #2ecc71;
+            color: #2ecc71;
+            background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
+        }
+        
+        .payment-button.bank:hover {
+            background: #2ecc71;
+            color: white;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            border: 1px solid #e74c3c;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .success-message {
+            background: #e8f5e9;
+            border: 1px solid #43a047;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        .contact-info {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 20px;
+        }
+        
+        .payment-note {
+            background: #e8f5e9;
+            border-left: 4px solid #2ecc71;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+        
+        /* STYLES POUR L'APPLICATION PRINCIPALE (cachée par défaut) */
+        .main-app {
+            display: none;
+        }
+        
+        .header-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            height: 400px;
+            margin-right: 15px;
+        }
+        
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            color: #3498db;
+            margin: 15px 0;
+            font-size: 1.5em;
+            font-weight: normal;
+        }
+
+        .author {
+            font-size: 1em;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+        
+        /* Bouton de déconnexion dans l'app */
+        .logout-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logout-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .logout-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .subscription-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .price-tag {
+                font-size: 2em;
+            }
+            
+            .payment-methods {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        .test-buttons {
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .test-buttons p {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .test-buttons button {
+            background: #27ae60;
+            margin: 2px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            width: auto;
+            display: inline-block;
+        }
+        
+        .test-buttons .debug-btn {
+            background: #e67e22;
+        }
+        
+        .test-buttons .fabrice-btn {
+            background: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <!-- ÉCRAN DE VÉRIFICATION D'ABONNEMENT -->
+    <div id="subscriptionOverlay" class="subscription-overlay">
+        <div class="subscription-container">
+            <h2>🎓 Admin'Quest</h2>
+            <p class="subtitle">Préparateur intelligent aux oraux d'administrateur territorial</p>
+            
+            <div id="subscriptionForm" class="subscription-form">
+                <h3>Accès par code d'abonnement</h3>
+                <input type="text" id="subscriptionCode" placeholder="Entrez votre code d'accès" maxlength="20">
+                <button onclick="validateSubscription()">Valider l'accès</button>
+                
+                <!-- Boutons de test rapide -->
+                <div class="test-buttons">
+                    <p>🧪 <strong>Codes de test :</strong></p>
+                    <button onclick="testDemo()">Test DEMO2025</button>
+                    <button onclick="testFabrice()" class="fabrice-btn">Test FABRICE2025</button>
+                    <button onclick="testDebug()" class="debug-btn">🔍 Debug</button>
+                </div>
+                
+                <div id="subscriptionError" class="error-message"></div>
+                <div id="subscriptionSuccess" class="success-message"></div>
+            </div>
+            
+            <div class="subscription-info">
+                <h3>Abonnement Annuel</h3>
+                <div class="price-tag">97€</div>
+                <ul class="features-list">
+                    <li>🗃️ Base de données de 700+ questions d'oraux</li>
+                    <li>🎯 7 méthodes de réponse structurées</li>
+                    <li>📊 Filtrage par épreuve, difficulté et catégorie</li>
+                    <li>🎪 Mode examen professionnel</li>
+                    <li>💡 Réponses automatiques détaillées</li>
+                    <li>📱 Interface responsive</li>
+                    <li>🔄 Mises à jour régulières</li>
+                </ul>
+            </div>
+            
+            <div class="payment-section">
+                <h4>💳 Commandez votre abonnement :</h4>
+                
+                <div class="payment-note">
+                    <strong>💡 Recommandation :</strong> Stripe (paiement sécurisé, confirmation immédiate) ou virement bancaire (sans frais)
+                </div>
+                
+                <div class="payment-methods">
+                    <a href="https://buy.stripe.com/14AdR98oGfzy8TQ07pdfG00" target="_blank" class="payment-button stripe">
+                        💳 Stripe (97€) - RECOMMANDÉ
+                    </a>
+                    
+                    <a href="mailto:fabrice.ribet@gmail.com?subject=Admin'Quest%20-%20Virement%20bancaire&body=Bonjour%20Fabrice%2C%0A%0AJe%20souhaite%20commander%20un%20abonnement%20Admin%27Quest%20pour%2097%E2%82%AC%20par%20virement%20bancaire.%0A%0AMon%20nom%20%3A%20%0AMon%20email%20%3A%20%0A%0AMerci%20de%20me%20communiquer%20vos%20coordonn%C3%A9es%20bancaires.%0A%0ACordialement" class="payment-button bank">
+                        🏦 Virement (97€)
+                    </a>
+                    
+                    <a href="mailto:fabrice.ribet@gmail.com?subject=Admin'Quest%20-%20Commande&body=Bonjour%20Fabrice%2C%0A%0AJe%20souhaite%20commander%20un%20abonnement%20Admin%27Quest%20pour%2097%E2%82%AC.%0A%0AMon%20nom%20%3A%20%0AMon%20email%20%3A%20%0AMon%20mode%20de%20paiement%20souhait%C3%A9%20%3A%20%0A%0ACordialement" class="payment-button">
+                        📧 Autre moyen
+                    </a>
+                </div>
+                
+                <div class="contact-info">
+                    <p><strong>📞 Contact :</strong> fabrice.ribet@gmail.com</p>
+                    <p><strong>⏱️ Livraison :</strong> Code d'accès sous 24h après confirmation de paiement</p>
+                    <p><strong>🛡️ Garantie :</strong> Satisfait ou remboursé</p>
+                    <p><strong>🧪 Mode test :</strong> <em>Stripe est en mode test - Aucun vrai paiement pour l'instant</em></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLICATION PRINCIPALE (cachée jusqu'à validation) -->
+    <div id="mainApp" class="main-app">
+        <div class="header-container">
+            <div class="logo-container">
+                <img src="https://i.goopics.net/0opqy7.png" alt="Logo Admin'Quest" class="logo">
+            </div>
+            <h2 class="subtitle">Préparateur intelligent aux oraux d'administrateur territorial</h2>
+            <p class="author">par Fabrice RIBET, préparateur aux concours du CNFPT, administrateur territorial, magistrat financier</p>
+            
+            <div class="logout-container">
+                <button class="logout-btn" onclick="logout()">🚪 Déconnexion</button>
+            </div>
+        </div>
+
+        <!-- Contenu de l'application sera ajouté ici -->
+        <div style="text-align: center; padding: 50px;">
+            <h1>🎉 CONNEXION RÉUSSIE !</h1>
+            <p>Vous êtes maintenant connecté à Admin'Quest</p>
+            <p><em>Interface complète en cours de chargement...</em></p>
+        </div>
+        
+    </div>
+    
+    <script>
+        // ===============================
+        // VARIABLES GLOBALES
+        // ===============================
+        console.log("🔍 Script chargé - Définition des fonctions...");
+        
+        // ===============================
+        // SYSTÈME DE GESTION D'ABONNEMENT
+        // ===============================
+        
+        // Base de données des abonnements (à gérer manuellement)
+        function getSubscriptionsDatabase() {
+            return {
+                'DEMO2025': {
+                    startDate: '2025-01-01',
+                    endDate: '2025-12-31',
+                    email: 'demo@example.com',
+                    type: 'demo'
+                },
+                'FABRICE2025': {
+                    startDate: '2025-01-01',
+                    endDate: '2025-12-31',
+                    email: 'fabrice.ribet@gmail.com',
+                    type: 'admin'
+                }
+            };
+        }
+        
+        // Fonction utilitaire pour afficher les erreurs
+        function showError(message) {
+            console.log("🔍 Erreur:", message);
+            const errorDiv = document.getElementById('subscriptionError');
+            const successDiv = document.getElementById('subscriptionSuccess');
+            
+            if (errorDiv && successDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+                successDiv.style.display = 'none';
+            }
+        }
+        
+        // Fonction utilitaire pour afficher les succès
+        function showSuccess(message) {
+            console.log("🔍 Succès:", message);
+            const errorDiv = document.getElementById('subscriptionError');
+            const successDiv = document.getElementById('subscriptionSuccess');
+            
+            if (errorDiv && successDiv) {
+                successDiv.textContent = message;
+                successDiv.style.display = 'block';
+                errorDiv.style.display = 'none';
+            }
+        }
+        
+        // Fonction pour valider un code d'abonnement
+        function validateSubscription() {
+            console.log("🔍 validateSubscription() appelée");
+            
+            const codeInput = document.getElementById('subscriptionCode');
+            if (!codeInput) {
+                console.error("🔍 Element subscriptionCode non trouvé");
+                return;
+            }
+            
+            const code = codeInput.value.trim().toUpperCase();
+            console.log("🔍 Code saisi:", code);
+            
+            if (!code) {
+                showError('Veuillez entrer un code d\'accès');
+                return;
+            }
+            
+            // Récupérer la base des abonnements
+            const subscriptions = getSubscriptionsDatabase();
+            console.log("🔍 Base des abonnements:", subscriptions);
+            
+            const subscription = subscriptions[code];
+            console.log("🔍 Abonnement trouvé:", subscription);
+            
+            if (!subscription) {
+                showError('Code d\'accès invalide. Codes de test : DEMO2025, FABRICE2025');
+                return;
+            }
+            
+            // Vérifier si l'abonnement est encore valide
+            const now = new Date();
+            const endDate = new Date(subscription.endDate);
+            
+            console.log("🔍 Date maintenant:", now);
+            console.log("🔍 Date fin:", endDate);
+            console.log("🔍 Valide:", endDate > now);
+            
+            if (endDate < now) {
+                showError('Cet abonnement a expiré le ' + endDate.toLocaleDateString('fr-FR') + '. Veuillez renouveler votre abonnement.');
+                return;
+            }
+            
+            // Sauvegarder l'abonnement valide
+            const subscriptionData = {
+                code: code,
+                startDate: subscription.startDate,
+                endDate: subscription.endDate,
+                email: subscription.email || '',
+                validatedAt: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem('adminquest_subscription', JSON.stringify(subscriptionData));
+                console.log("🔍 Données sauvegardées:", subscriptionData);
+            } catch(e) {
+                console.error("🔍 Erreur localStorage:", e);
+                showError('Erreur de sauvegarde. Essayez un autre navigateur.');
+                return;
+            }
+            
+            showSuccess(`Accès validé ! Abonnement valide jusqu'au ${endDate.toLocaleDateString('fr-FR')}`);
+            
+            console.log("🔍 Validation réussie, démarrage app dans 1.5s");
+            setTimeout(showMainApp, 1500);
+        }
+        
+        // Fonction pour afficher l'application principale
+        function showMainApp() {
+            console.log("🔍 showMainApp() appelée");
+            
+            const overlay = document.getElementById('subscriptionOverlay');
+            const mainApp = document.getElementById('mainApp');
+            
+            if (overlay && mainApp) {
+                overlay.style.display = 'none';
+                mainApp.style.display = 'block';
+                console.log("🔍 Interface basculée vers l'app principale");
+            } else {
+                console.error("🔍 Éléments DOM non trouvés:", {overlay: !!overlay, mainApp: !!mainApp});
+            }
+        }
+        
+        // Fonction pour déconnecter l'utilisateur
+        function logout() {
+            console.log("🔍 logout() appelée");
+            localStorage.removeItem('adminquest_subscription');
+            location.reload();
+        }
+        
+        // Fonction pour obtenir un abonnement valide
+        function getValidSubscription() {
+            try {
+                const stored = localStorage.getItem('adminquest_subscription');
+                if (!stored) return null;
+                
+                const subscription = JSON.parse(stored);
+                const endDate = new Date(subscription.endDate);
+                const now = new Date();
+                
+                if (endDate > now) {
+                    console.log("🔍 Abonnement valide trouvé:", subscription);
+                    return subscription;
+                } else {
+                    console.log("🔍 Abonnement expiré, suppression");
+                    localStorage.removeItem('adminquest_subscription');
+                    return null;
+                }
+            } catch (e) {
+                console.log("🔍 Erreur lecture localStorage:", e);
+                localStorage.removeItem('adminquest_subscription');
+                return null;
+            }
+        }
+        
+        // Fonctions de test rapide
+        function testDemo() {
+            console.log("🔍 testDemo() appelée");
+            document.getElementById('subscriptionCode').value = 'DEMO2025';
+            validateSubscription();
+        }
+        
+        function testFabrice() {
+            console.log("🔍 testFabrice() appelée");
+            document.getElementById('subscriptionCode').value = 'FABRICE2025';
+            validateSubscription();
+        }
+        
+        // Fonction de debug
+        function testDebug() {
+            console.log("=== 🔍 DEBUG ADMIN'QUEST ===");
+            
+            const subscriptions = getSubscriptionsDatabase();
+            console.log("1. Base des abonnements:", subscriptions);
+            console.log("2. DEMO2025:", subscriptions['DEMO2025']);
+            console.log("3. FABRICE2025:", subscriptions['FABRICE2025']);
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('test', 'ok');
+                localStorage.removeItem('test');
+                console.log("4. localStorage: ✅ OK");
+            } catch(e) {
+                console.log("4. localStorage: ❌ ERREUR", e);
+            }
+            
+            // Test DOM
+            const elements = {
+                subscriptionCode: document.getElementById('subscriptionCode'),
+                subscriptionError: document.getElementById('subscriptionError'),
+                subscriptionSuccess: document.getElementById('subscriptionSuccess'),
+                subscriptionOverlay: document.getElementById('subscriptionOverlay'),
+                mainApp: document.getElementById('mainApp')
+            };
+            
+            console.log("5. Éléments DOM:");
+            for (const [name, element] of Object.entries(elements)) {
+                console.log(`   - ${name}: ${!!element}`);
+            }
+            
+            // Test dates
+            const now = new Date();
+            const endDate = new Date('2025-12-31');
+            console.log("6. Test dates:");
+            console.log("   - Maintenant:", now);
+            console.log("   - Fin 2025:", endDate);
+            console.log("   - Valide:", endDate > now);
+            
+            // Vérifier abonnement existant
+            const existing = getValidSubscription();
+            console.log("7. Abonnement existant:", existing);
+            
+            alert("🔍 Debug terminé - Regardez la console (F12) pour les détails");
+        }
+        
+        // ===============================
+        // INITIALISATION
+        // ===============================
+        
+        // Vérifier l'abonnement au chargement
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log("🔍 Page chargée, vérification abonnement...");
+            const subscription = getValidSubscription();
+            if (subscription) {
+                console.log("🔍 Abonnement valide trouvé, affichage direct de l'app");
+                showMainApp();
+            } else {
+                console.log("🔍 Aucun abonnement valide, affichage formulaire");
+            }
+        });
+        
+        console.log("🔍 Toutes les fonctions définies avec succès !");
+    </script>
+</body>
+</html>
