@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructions Stripe - Passage en production</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-left: 4px solid #3498db;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .section h2 {
+            color: #2980b9;
+            margin-top: 0;
+        }
+        
+        .warning {
+            border-left-color: #e74c3c;
+            background: #ffebee;
+        }
+        
+        .warning h2 {
+            color: #c0392b;
+        }
+        
+        .success {
+            border-left-color: #27ae60;
+            background: #e8f5e9;
+        }
+        
+        .success h2 {
+            color: #27ae60;
+        }
+        
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .step {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            position: absolute;
+            top: -15px;
+            left: 15px;
+        }
+        
+        .step-content {
+            margin-top: 10px;
+        }
+        
+        .button {
+            background: #3498db;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .button:hover {
+            background: #2980b9;
+        }
+        
+        .button.success {
+            background: #27ae60;
+        }
+        
+        .button.warning {
+            background: #e67e22;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .current-url {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Configuration Stripe Admin'Quest</h1>
+        <p class="subtitle">Guide pour passer du mode test au mode production</p>
+        
+        <!-- STATUT ACTUEL -->
+        <div class="section warning">
+            <h2>⚠️ Statut actuel : MODE TEST</h2>
+            <p><strong>URL actuelle :</strong></p>
+            <div class="current-url">
+                https://buy.stripe.com/14AdR98oGfzy8TQ07pdfG00
+            </div>
+            <p>🧪 <strong>Cette URL est en mode test</strong> - Les paiements ne sont pas réels</p>
+            <p>✅ Parfait pour tester le système avant la mise en production</p>
+        </div>
+        
+        <!-- COMMENT TESTER -->
+        <div class="section">
+            <h2>🧪 Comment tester le paiement</h2>
+            <ol>
+                <li>Cliquez sur le bouton Stripe dans votre formulaire</li>
+                <li>Utilisez les <strong>cartes de test Stripe</strong> :</li>
+            </ol>
+            
+            <div class="code-block">
+✅ Paiement réussi :
+   • Numéro : 4242 4242 4242 4242
+   • Date : n'importe quelle date future (ex: 12/28)  
+   • CVC : n'importe quel 3 chiffres (ex: 123)
+   
+❌ Paiement refusé :
+   • Numéro : 4000 0000 0000 0002
+   • Date : n'importe quelle date future
+   • CVC : n'importe quel 3 chiffres
+            </div>
+            
+            <p>📧 Vous recevrez un email de confirmation pour chaque test</p>
+        </div>
+        
+        <!-- PASSAGE EN PRODUCTION -->
+        <div class="section success">
+            <h2>🚀 Passage en mode PRODUCTION</h2>
+            <p>Quand vous êtes prêt à recevoir de vrais paiements :</p>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <strong>Activer votre compte Stripe</strong>
+                    <ul>
+                        <li>Complétez la vérification d'identité</li>
+                        <li>Ajoutez vos informations bancaires</li>
+                        <li>Activez les paiements en ligne</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <strong>Basculer en mode Live</strong>
+                    <ul>
+                        <li>Dans votre Dashboard Stripe, basculez de "Test" vers "Live"</li>
+                        <li>Recréez votre produit "Admin'Quest" en mode Live</li>
+                        <li>Créez un nouveau Payment Link en mode Live</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <strong>Mettre à jour les fichiers</strong>
+                    <ul>
+                        <li>Copiez la nouvelle URL (elle ressemblera à : <code>https://buy.stripe.com/live_xxxxxx</code>)</li>
+                        <li>Remplacez l'ancienne URL dans vos fichiers HTML</li>
+                        <li>Supprimez la mention "Mode test"</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <strong>Test final</strong>
+                    <ul>
+                        <li>Faites un test avec une vraie carte (1€ par exemple)</li>
+                        <li>Vérifiez que l'argent arrive sur votre compte</li>
+                        <li>Remboursez le test depuis le Dashboard Stripe</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GESTION DES COMMANDES -->
+        <div class="section">
+            <h2>📊 Gestion des commandes</h2>
+            <p><strong>Pour voir vos paiements :</strong></p>
+            <ol>
+                <li>Connectez-vous à votre <a href="https://dashboard.stripe.com" target="_blank" class="button">Dashboard Stripe</a></li>
+                <li>Allez dans <strong>Paiements</strong> pour voir toutes les transactions</li>
+                <li>Chaque paiement contient l'email du client</li>
+                <li>Créez manuellement le code d'accès avec votre interface admin</li>
+                <li>Envoyez le code au client par email</li>
+            </ol>
+            
+            <p><strong>💡 Workflow recommandé :</strong></p>
+            <ul>
+                <li>✅ Client paie via Stripe → Vous recevez email de notification</li>
+                <li>🔧 Vous créez le code dans l'interface admin</li>
+                <li>📧 Vous envoyez le code au client</li>
+                <li>⭐ Client accède à Admin'Quest</li>
+            </ul>
+        </div>
+        
+        <!-- AUTOMATISATION FUTURE -->
+        <div class="section">
+            <h2>🤖 Automatisation future (optionnel)</h2>
+            <p>Pour automatiser complètement le processus (avancé) :</p>
+            <ul>
+                <li><strong>Webhooks Stripe</strong> : Créer automatiquement les codes après paiement</li>
+                <li><strong>API EmailJS</strong> : Envoyer automatiquement les codes aux clients</li>
+                <li><strong>Base de données</strong> : Stocker les abonnements côté serveur</li>
+            </ul>
+            <p>💡 <em>Pour l'instant, la gestion manuelle est parfaitement adaptée à votre volume d'affaires</em></p>
+        </div>
+        
+        <!-- LIENS UTILES -->
+        <div class="section">
+            <h2>🔗 Liens utiles</h2>
+            <div style="text-align: center;">
+                <a href="https://dashboard.stripe.com" target="_blank" class="button">Dashboard Stripe</a>
+                <a href="admin_abonnements.html" target="_blank" class="button success">Interface Admin</a>
+                <a href="index_final_avec_options_paiement.html" target="_blank" class="button warning">Formulaire Principal</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>🎯 Admin'Quest</strong> - Système de monétisation par abonnement</p>
+            <p>© Fabrice RIBET 2025 - Configuration Stripe</p>
+        </div>
+    </div>
+</body>
+</html>
