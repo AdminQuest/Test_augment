@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin'Quest - Mode Administrateur</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-title {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .admin-subtitle {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .auth-section, .upload-section {
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .auth-section.active, .upload-section.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 0.75rem;
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .file-input-label.has-file {
+            border-color: #28a745;
+            background: #f8fff9;
+            color: #28a745;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .conversion-log {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .log-line {
+            margin-bottom: 0.25rem;
+        }
+
+        .log-line.success { color: #28a745; }
+        .log-line.error { color: #dc3545; }
+        .log-line.warning { color: #ffc107; }
+        .log-line.info { color: #17a2b8; }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .admin-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">
+                🔐 Admin'Quest
+            </h1>
+            <p class="admin-subtitle">Interface d'administration - Injection CSV</p>
+        </div>
+
+        <!-- Section d'authentification -->
+        <div class="auth-section active">
+            <div class="input-group">
+                <label for="admin-password">Mot de passe administrateur :</label>
+                <input type="password" id="admin-password" placeholder="Entrez le mot de passe">
+            </div>
+            <button class="btn btn-full" onclick="authenticate()">🔓 Accéder au mode administrateur</button>
+        </div>
+
+        <!-- Section d'upload -->
+        <div class="upload-section">
+            <div class="input-group">
+                <label>Fichier CSV à injecter :</label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="csv-file" class="file-input" accept=".csv" onchange="handleFileSelect()">
+                    <label for="csv-file" class="file-input-label" id="file-label">
+                        📁 Cliquez pour sélectionner un fichier CSV
+                    </label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="delimiter">Délimiteur CSV :</label>
+                <select id="delimiter">
+                    <option value=";">Point-virgule (;)</option>
+                    <option value=",">Virgule (,)</option>
+                    <option value="	">Tabulation</option>
+                </select>
+            </div>
+
+            <div class="progress-bar" id="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+
+            <button class="btn btn-full" onclick="processCSV()" id="process-btn" disabled>
+                ⚡ Traiter et injecter le CSV
+            </button>
+
+            <div class="status" id="status"></div>
+
+            <div class="conversion-log" id="conversion-log"></div>
+
+            <div class="quick-actions">
+                <button class="btn" onclick="downloadJSON()">📥 Télécharger JSON</button>
+                <button class="btn" onclick="testApplication()">🧪 Tester l'application</button>
+            </div>
+        </div>
+
+        <div class="admin-footer">
+            <p>Admin'Quest v2.0 - Mode Administrateur</p>
+            <p>Fabrice Ribet - Préparation concours territoriaux</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const ADMIN_PASSWORDS = ['FABRICE2025', 'ADMIN2025', 'RIBET2025'];
+        let processedData = null;
+
+        // Authentification
+        function authenticate() {
+            const password = document.getElementById('admin-password').value;
+            
+            if (ADMIN_PASSWORDS.includes(password)) {
+                document.querySelector('.auth-section').classList.remove('active');
+                document.querySelector('.upload-section').classList.add('active');
+                showStatus('Authentification réussie ! Bienvenue Fabrice.', 'success');
+            } else {
+                showStatus('Mot de passe incorrect.', 'error');
+                document.getElementById('admin-password').value = '';
+            }
+        }
+
+        // Gestion de la sélection de fichier
+        function handleFileSelect() {
+            const fileInput = document.getElementById('csv-file');
+            const fileLabel = document.getElementById('file-label');
+            const processBtn = document.getElementById('process-btn');
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                fileLabel.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                fileLabel.classList.add('has-file');
+                processBtn.disabled = false;
+            } else {
+                fileLabel.textContent = '📁 Cliquez pour sélectionner un fichier CSV';
+                fileLabel.classList.remove('has-file');
+                processBtn.disabled = true;
+            }
+        }
+
+        // Traitement du CSV
+        async function processCSV() {
+            const fileInput = document.getElementById('csv-file');
+            const delimiter = document.getElementById('delimiter').value;
+            
+            if (!fileInput.files[0]) {
+                showStatus('Veuillez sélectionner un fichier CSV.', 'error');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            showProgress(0);
+            document.getElementById('progress-bar').style.display = 'block';
+            document.getElementById('conversion-log').style.display = 'block';
+            
+            logMessage('🔄 Début du traitement...', 'info');
+            logMessage(`📖 Fichier: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`, 'info');
+            logMessage(`🔍 Délimiteur: ${delimiter}`, 'info');
+
+            try {
+                showProgress(20);
+                
+                // Lecture du fichier
+                const csvContent = await readFile(file);
+                logMessage('✅ Fichier lu avec succès', 'success');
+                
+                showProgress(40);
+                
+                // Parsing CSV
+                const questions = parseCSV(csvContent, delimiter);
+                logMessage(`🔍 ${questions.length} questions extraites`, 'success');
+                
+                showProgress(60);
+                
+                // Validation
+                const validQuestions = validateQuestions(questions);
+                logMessage(`✅ ${validQuestions.length} questions valides`, 'success');
+                
+                showProgress(80);
+                
+                // Génération JSON
+                processedData = validQuestions;
+                const jsonString = JSON.stringify(processedData, null, 2);
+                logMessage(`💾 JSON généré (${(jsonString.length / 1024).toFixed(1)} KB)`, 'success');
+                
+                showProgress(100);
+                
+                logMessage('🎉 Traitement terminé avec succès !', 'success');
+                showStatus(`✅ CSV traité avec succès ! ${validQuestions.length} questions prêtes à être injectées.`, 'success');
+                
+            } catch (error) {
+                logMessage(`❌ Erreur: ${error.message}`, 'error');
+                showStatus(`❌ Erreur lors du traitement: ${error.message}`, 'error');
+            }
+        }
+
+        // Lecture de fichier
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(new Error('Erreur de lecture du fichier'));
+                reader.readAsText(file, 'utf-8');
+            });
+        }
+
+        // Parsing CSV avec gestion des délimiteurs
+        function parseCSV(content, delimiter) {
+            const lines = content.split('\n').filter(line => line.trim());
+            if (lines.length < 2) {
+                throw new Error('Fichier CSV vide ou mal formaté');
+            }
+
+            // Nettoyer le BOM UTF-8 si présent
+            if (lines[0].charCodeAt(0) === 0xFEFF) {
+                lines[0] = lines[0].slice(1);
+            }
+
+            const headers = parseCSVLine(lines[0], delimiter);
+            logMessage(`📋 ${headers.length} colonnes détectées`, 'info');
+
+            const questions = [];
+            for (let i = 1; i < lines.length; i++) {
+                const fields = parseCSVLine(lines[i], delimiter);
+                if (fields.length >= headers.length - 2) { // Tolérance pour les colonnes manquantes
+                    const question = {};
+                    headers.forEach((header, index) => {
+                        question[header] = fields[index] || '';
+                    });
+                    questions.push(question);
+                }
+            }
+
+            return questions;
+        }
+
+        // Parser une ligne CSV
+        function parseCSVLine(line, delimiter) {
+            const fields = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === delimiter && !inQuotes) {
+                    fields.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            fields.push(current.trim());
+            return fields;
+        }
+
+        // Validation des questions
+        function validateQuestions(questions) {
+            const valid = questions.filter(q => {
+                const id = q['ID'] || q['id'];
+                const text = q['Question'];
+                const category = q['Catégorie principale'];
+                return id && text && category;
+            });
+
+            logMessage(`🔍 Validation: ${valid.length}/${questions.length} questions valides`, valid.length === questions.length ? 'success' : 'warning');
+            return valid;
+        }
+
+        // Téléchargement du JSON
+        function downloadJSON() {
+            if (!processedData) {
+                showStatus('Aucune donnée à télécharger. Traitez d\'abord un fichier CSV.', 'error');
+                return;
+            }
+
+            const jsonString = JSON.stringify(processedData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `questions_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            logMessage('📥 Fichier JSON téléchargé', 'success');
+        }
+
+        // Test de l'application
+        function testApplication() {
+            window.open('https://adminquest.github.io/Test_augment/', '_blank');
+        }
+
+        // Utilitaires d'interface
+        function showProgress(percent) {
+            document.getElementById('progress-fill').style.width = percent + '%';
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+            
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function logMessage(message, type = 'info') {
+            const log = document.getElementById('conversion-log');
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Gestion des touches
+        document.getElementById('admin-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                authenticate();
+            }
+        });
+    </script>
+</body>
+</html>
